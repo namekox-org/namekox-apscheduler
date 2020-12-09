@@ -3,14 +3,4 @@
 pip install -U namekox-apscheduler
 ```
 
-# Example
-> ping.py
-```python
-
-```
-
-# Running
-> namekox run ping
-```shell script
-
-```
+# [Example](https://github.com/namekox-org/service-examples/tree/master/apscheduler)
