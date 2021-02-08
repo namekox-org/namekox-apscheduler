@@ -49,13 +49,13 @@ class Log(Model, su.Timestamp):
     def update_or_create(cls, engine, lock, job_id, status, run_time, ret_value=None, exception=None, traceback=None):
         lock.acquire()
         run_time = make_naive(run_time)
-        where_sql = sa.and_(cls.job_id == job_id, cls.run_time == run_time)
-        query_sql = sa.select([cls.id])
-        query_sql = query_sql.where(where_sql)
-        log_id = engine.execute(query_sql).scalar()
-        if not log_id:
+        if status == cls.STATUS_SUBMITTED:
             query_sql = sa.insert(cls).values(**{'status': status, 'run_time': run_time, 'job_id': job_id})
         else:
+            where_sql = sa.and_(cls.job_id == job_id, cls.run_time == run_time)
+            query_sql = sa.select([cls.id])
+            query_sql = query_sql.where(where_sql)
+            log_id = engine.execute(query_sql).scalar()
             finished = datetime.utcnow()
             duration = (finished - run_time).total_seconds()
             query_sql = sa.update(cls).values(**{'status': status, 'finished': finished, 'duration': duration,
