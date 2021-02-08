@@ -130,14 +130,13 @@ class DBJobStore(DBJobStoreMixin, BaseJobStore):
         query_sql = query_sql.order_by(models.Job.next_run_time)
         query_sql = query_sql.where(*conditions) if conditions else query_sql
         fail_job_ids = set()
-        rows = self.db_engine.execute(query_sql)
-        for row in rows:
+        for row in self.db_engine.execute(query_sql):
             try:
                 jobs.append(self._reconstitute_job(row.job_state))
-            except BaseException:
+            except Exception:
                 logger.warn('unable to restore job %s -- removing it', row.id)
                 fail_job_ids.add(row.name)
-        # Remove all the jobs we failed to restore
+        # remove all the jobs we failed to restore
         query_sql = sa.delete(models.Job)
         query_sql = query_sql.where(models.Job.name.in_(fail_job_ids))
         self.db_engine.execute(query_sql)
@@ -172,14 +171,12 @@ class DBJobStore(DBJobStoreMixin, BaseJobStore):
         query_sql = sa.insert(models.Job).values(**{
             'name': job.id,
             'next_run_time': next_run_time,
-            'job_state': pickle.dumps(job.__getstate__(), pickle.HIGHEST_PROTOCOL)
-        })
+            'job_state': pickle.dumps(job.__getstate__(), pickle.HIGHEST_PROTOCOL)})
         try:
             self.db_engine.execute(query_sql)
         except IntegrityError:
             self._raise_again(ConflictingIdError, job.id)
-        finally:
-            self.db_stlock.release()
+        self.db_stlock.release()
 
     def update_job(self, job):
         self.db_stlock.acquire()
