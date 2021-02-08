@@ -8,7 +8,6 @@ import time
 
 
 from pytz import UTC
-from sqlalchemy import create_engine
 from namekox_core.core.friendly import AsLazyProperty
 from namekox_core.core.service.dependency import Dependency
 from namekox_apscheduler.core.schedule import EventletScheduler
