@@ -17,11 +17,11 @@ from namekox_apscheduler.constants import APSCHEDULER_CONFIG_KEY
 class APSchedulerHelper(Dependency):
     def __init__(self, **options):
         self.gt = None
-        self.is_stopped = False
         self.db_engine = None
+        self.is_stopped = False
         options.setdefault('timezone', UTC)
-        self.scheduler = EventletScheduler()
         self.options = options
+        self.scheduler = EventletScheduler()
         super(APSchedulerHelper, self).__init__(**options)
 
     @AsLazyProperty
