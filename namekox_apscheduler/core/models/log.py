@@ -46,26 +46,20 @@ class Log(Model, su.Timestamp):
     job_id = sa.Column(sa.String(200), sa.ForeignKey('jobs.name', ondelete='CASCADE'))
 
     @classmethod
-    def update_or_create(cls, engine, lock, job_id, status, run_time, ret_value=None, exception=None, traceback=None):
+    def create(cls, engine, lock, job_id, status, run_time, ret_value=None, exception=None, traceback=None):
         lock.acquire()
         finished = datetime.utcnow()
         run_time = make_naive(run_time)
-        if status == cls.STATUS_SUBMITTED:
-            query_sql = sa.insert(cls).values(**{'status': status, 'run_time': run_time, 'job_id': job_id})
-        else:
-            where_sql = sa.and_(cls.job_id == job_id, cls.run_time == run_time)
-            query_sql = sa.select([cls.id])
-            query_sql = query_sql.where(where_sql)
-            log_id = engine.execute(query_sql).scalar()
-            duration = (finished - run_time).total_seconds()
-            query_sql = sa.update(cls).values(**{
-                'status': status,
-                'finished': finished,
-                'duration': duration,
-                'ret_value': ret_value,
-                'exception': exception,
-                'traceback': traceback
-            })
-            query_sql = query_sql.where(cls.id == log_id)
+        duration = (finished - run_time).total_seconds()
+        query_sql = sa.insert(cls).values(**{
+            'run_time': run_time,
+            'finished': finished,
+            'duration': duration,
+            'job_id': job_id,
+            'status': status,
+            'ret_value': ret_value,
+            'exception': exception,
+            'traceback': traceback,
+        })
         engine.execute(query_sql)
         lock.release()

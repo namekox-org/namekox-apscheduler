@@ -43,28 +43,19 @@ class DBJobStoreMixin(object):
         self.db_stlock = self._scheduler._create_lock()
         self.register_event_listeners()
 
-    def handle_submitted_event(self, event):
-        models.Log.update_or_create(
-            self.db_engine,
-            self.db_stlock,
-            event.job_id,
-            models.Log.STATUS_SUBMITTED,
-            event.scheduled_run_times[0]
-        )
-
     def handle_executed_event(self, event):
-        models.Log.update_or_create(
+        models.Log.create(
             self.db_engine,
             self.db_stlock,
             event.job_id,
             models.Log.STATUS_EXECUTED,
             event.scheduled_run_time,
-            ret_value=str(event.retval),
+            ret_value=str(event.retval)
         )
 
     def handle_missed_event(self, event):
         exception = 'execute of job {} time missed'.format(event.job_id)
-        models.Log.update_or_create(
+        models.Log.create(
             self.db_engine,
             self.db_stlock,
             event.job_id,
@@ -76,11 +67,11 @@ class DBJobStoreMixin(object):
 
     def handle_max_instances_event(self, event):
         exception = 'execute of job {} reached max instances'.format(event.job_id)
-        models.Log.update_or_create(
+        models.Log.create(
             self.db_engine,
             self.db_stlock,
             event.job_id,
-            models.Log.STATUS_MISSED,
+            models.Log.STATUS_MAX_INSTANCES,
             event.scheduled_run_times[0],
             exception=exception
         )
@@ -92,11 +83,11 @@ class DBJobStoreMixin(object):
         else:
             exception = str(event.exception)
             traceback = str(event.traceback)
-        models.Log.update_or_create(
+        models.Log.create(
             self.db_engine,
             self.db_stlock,
             event.job_id,
-            models.Log.STATUS_MISSED,
+            models.Log.STATUS_ERROR,
             event.scheduled_run_time,
             ret_value=str(event.retval),
             exception=exception,
@@ -104,7 +95,6 @@ class DBJobStoreMixin(object):
         )
 
     def register_event_listeners(self):
-        self._scheduler.add_listener(self.handle_submitted_event, events.EVENT_JOB_SUBMITTED)
         self._scheduler.add_listener(self.handle_executed_event, events.EVENT_JOB_EXECUTED)
         self._scheduler.add_listener(self.handle_missed_event, events.EVENT_JOB_MISSED)
         self._scheduler.add_listener(self.handle_max_instances_event, events.EVENT_JOB_MAX_INSTANCES)
