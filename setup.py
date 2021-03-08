@@ -17,14 +17,14 @@ readme = open(os.path.join(curdir, 'READIT.md'), 'rb', 'utf-8').read()
 
 setup(
     name='namekox-apscheduler',
-    version='0.0.6',
+    version='0.0.7',
     description='namekox apscheduler',
     long_description=readme,
     long_description_content_type='text/markdown',
     author='forcemain',
     url='https://forcemain.github.io/',
     packages=find_packages(exclude=['test', 'test.*']),
-    install_requires=["namekox-core>=0.0.1", "apscheduler>=3.7.0", "sqlalchemy>=1.3.20", "sqlalchemy-utils<=0.36.3"],
+    install_requires=["namekox-core", "apscheduler==3.7.0", "sqlalchemy==1.3.20", "sqlalchemy-utils==0.36.3"],
     zip_safe=True,
     license='Apache License, Version 2.0',
     classifiers=[
